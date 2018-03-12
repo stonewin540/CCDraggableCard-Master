@@ -61,4 +61,13 @@
 - (void)removeForDirection:(CCDraggableDirection)direction;
 - (void)reloadData;
 
+// More compatibility
+@property (nonatomic, assign) CGFloat boundaryRatio;
+@property (nonatomic, assign) CGFloat secondCardScale;
+@property (nonatomic, assign) CGFloat thirdCardScale;
+
+@property (nonatomic, assign) CGFloat containerLeftRightEdgeInsets;
+@property (nonatomic, assign) CGFloat cardTopBottomEdgeInsets;
+@property (nonatomic, assign) NSUInteger numberOfVisibleCards;
+
 @end

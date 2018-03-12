@@ -27,6 +27,14 @@
 - (instancetype)initWithFrame:(CGRect)frame style:(CCDraggableStyle)style {
     self = [self initWithFrame:frame];
     self.style = style;
+    
+    _boundaryRatio = 0.8f;
+    _secondCardScale = 0.95f;
+    _thirdCardScale = 0.9f;
+    
+    _containerLeftRightEdgeInsets = 15;
+    _cardTopBottomEdgeInsets = 15;
+    _numberOfVisibleCards = 3;
     return self;
 }
 
@@ -54,12 +62,12 @@
     CGFloat s_width  = CGRectGetWidth(self.frame);
     CGFloat s_height = CGRectGetHeight(self.frame);
     
-    CGFloat c_height = s_height - kContainerEdage * 2 - kCardEdage * 2;
+    CGFloat c_height = s_height - self.containerLeftRightEdgeInsets * 2 - self.cardTopBottomEdgeInsets * 2;
     
     return CGRectMake(
-                      kContainerEdage,
-    (s_height - (c_height + kCardEdage * 2)) / 2,
-                                s_width  - kContainerEdage * 2,
+                      self.containerLeftRightEdgeInsets,
+    (s_height - (c_height + self.cardTopBottomEdgeInsets * 2)) / 2,
+                                s_width  - self.containerLeftRightEdgeInsets * 2,
                                 c_height);
 }
 
@@ -69,7 +77,7 @@
     if (self.dataSource && [self.dataSource respondsToSelector:@selector(numberOfIndexs)] && [self.dataSource respondsToSelector:@selector(draggableContainer:viewForIndex:)]) {
         
         NSInteger indexs = [self.dataSource numberOfIndexs];
-        NSInteger preloadViewCont = indexs <= kVisibleCount ? indexs : kVisibleCount;
+        NSInteger preloadViewCont = indexs <= self.numberOfVisibleCards ? indexs : self.numberOfVisibleCards;
         
         /*
         在此需添加当前Card是否移动的状态A
@@ -96,7 +104,7 @@
                         self.cardCenter = cardView.center;
                         /*
                         self.lastCardFrame = CGRectMake(frame.origin.x,
-                                                        frame.origin.y + 2 * kCardEdage,
+                                                        frame.origin.y + 2 * self.cardTopBottomEdgeInsets,
                                                         frame.size.width,
                                                         frame.size.height);
                          */
@@ -201,7 +209,7 @@
         float moveWidth  = (gesture.view.center.x  - self.cardCenter.x);
         float moveHeight = (gesture.view.center.y - self.cardCenter.y);
 
-        [self finishedPanGesture:gesture.view direction:self.direction scale:(moveWidth / moveHeight) disappear:fabs(widthRatio) > kBoundaryRatio];
+        [self finishedPanGesture:gesture.view direction:self.direction scale:(moveWidth / moveHeight) disappear:fabs(widthRatio) > self.boundaryRatio];
     }
 }
 
@@ -215,7 +223,7 @@
     if (!disappear) {
         if (self.dataSource && [self.dataSource respondsToSelector:@selector(numberOfIndexs)]) {
             // 2016.12.15 修复第四个视图没有被移除的BUG
-            if (self.moving && self.currentCards.count > kVisibleCount) {
+            if (self.moving && self.currentCards.count > self.numberOfVisibleCards) {
                 UIView *lastView = [self.currentCards lastObject];
                 [lastView removeFromSuperview];
                 [self.currentCards removeObject:lastView];
@@ -321,10 +329,10 @@
 // scale: MAX: kBoundaryRatio
 - (void)movingVisibleCards:(CGFloat)scale {
     
-    scale = fabs(scale) >= kBoundaryRatio ? kBoundaryRatio : fabs(scale);
-    CGFloat sPoor = kSecondCardScale - kTherdCardScale; // 相邻两个CardScale差值
-    CGFloat tPoor = sPoor / (kBoundaryRatio / scale); // transform x值
-    CGFloat yPoor = kCardEdage / (kBoundaryRatio / scale); // frame y差值
+    scale = fabs(scale) >= self.boundaryRatio ? self.boundaryRatio : fabs(scale);
+    CGFloat sPoor = self.secondCardScale - self.thirdCardScale; // 相邻两个CardScale差值
+    CGFloat tPoor = sPoor / (self.boundaryRatio / scale); // transform x值
+    CGFloat yPoor = self.cardTopBottomEdgeInsets / (self.boundaryRatio / scale); // frame y差值
     
     for (int i = 1; i < self.currentCards.count; i++) {
         
@@ -333,14 +341,14 @@
         switch (i) {
             case 1:
             {
-                CGAffineTransform scale = CGAffineTransformScale(CGAffineTransformIdentity, tPoor + kSecondCardScale, 1);// 改变tran
+                CGAffineTransform scale = CGAffineTransformScale(CGAffineTransformIdentity, tPoor + self.secondCardScale, 1);// 改变tran
                 CGAffineTransform translate = CGAffineTransformTranslate(scale, 0, -yPoor); // 改变frame
                 cardView.transform = translate;
             }
                 break;
             case 2:
             {
-                CGAffineTransform scale = CGAffineTransformScale(CGAffineTransformIdentity, tPoor + kTherdCardScale, 1);
+                CGAffineTransform scale = CGAffineTransformScale(CGAffineTransformIdentity, tPoor + self.thirdCardScale, 1);
                 CGAffineTransform translate = CGAffineTransformTranslate(scale, 0, -yPoor);
                 cardView.transform = translate;
             }
@@ -378,16 +386,16 @@
                 break;
             case 1:
             {
-                frame.origin.y = frame.origin.y + kCardEdage;
+                frame.origin.y = frame.origin.y + self.cardTopBottomEdgeInsets;
                 cardView.frame = frame;
-                cardView.transform = CGAffineTransformScale(CGAffineTransformIdentity, kSecondCardScale, 1);
+                cardView.transform = CGAffineTransformScale(CGAffineTransformIdentity, self.secondCardScale, 1);
             }
                 break;
             case 2:
             {
-                frame.origin.y = frame.origin.y + kCardEdage * 2;
+                frame.origin.y = frame.origin.y + self.cardTopBottomEdgeInsets * 2;
                 cardView.frame = frame;
-                cardView.transform = CGAffineTransformScale(CGAffineTransformIdentity, kTherdCardScale, 1);
+                cardView.transform = CGAffineTransformScale(CGAffineTransformIdentity, self.thirdCardScale, 1);
 
                 NSLog(@"第三个Card距容器视图底部：%f", CGRectGetHeight(self.frame) - CGRectGetMaxY(cardView.frame));
 
